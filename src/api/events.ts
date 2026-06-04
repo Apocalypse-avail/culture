@@ -36,7 +36,7 @@ export function buildApiPath(
     )
   }
 
-  return `${segments.join('/')}/`
+  return `${segments.join('/')}`
 }
 
 function normalizeRows(
@@ -85,7 +85,7 @@ async function requestSeoulApi(apiPath: string): Promise<unknown> {
 
   if (!res.ok) {
     throw new Error(
-      `API 요청 실패 (${res.status}). 배포 환경이면 Vercel 재배포 후 다시 시도해 주세요.`,
+      `API 요청 실패 (${res.status}). Vercel 대시보드에서 최신 배포가 완료됐는지 확인해 주세요.`,
     )
   }
 
