@@ -100,7 +100,11 @@ function App() {
           freeCount={freeCount}
         />
 
-        {error && <div className="alert error">{error}</div>}
+        {error && (
+          <div className="alert error" style={{ whiteSpace: 'pre-wrap' }}>
+            {error}
+          </div>
+        )}
         {apiMessage && !error && <div className="alert warn">{apiMessage}</div>}
 
         <div className="content-layout">
