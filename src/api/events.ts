@@ -3,7 +3,7 @@ import type { CulturalEvent, EventFilters, FetchEventsResult } from '../types/ev
 /** .env 미설정 시 사용 (GitHub Pages 등 배포 환경용) */
 const DEFAULT_API_KEY = '776e786a4b7365613130375943726174'
 const API_KEY = (import.meta.env.VITE_SEOUL_API_KEY ?? DEFAULT_API_KEY).trim()
-const SEOUL_API_HOST = 'http://openapi.seoul.go.kr:8088'
+const PROXY_PREFIX = '/api/seoul'
 
 function encodeSegment(value: string): string {
   return value.trim() ? encodeURIComponent(value.trim()) : ''
@@ -78,53 +78,26 @@ async function readJsonResponse(res: Response): Promise<unknown> {
   }
 }
 
-/** 로컬 프록시 → 직접 호출 순으로 시도 */
+/** Vite dev 프록시 / Vercel serverless(api/seoul) 공통 경로 */
 async function requestSeoulApi(apiPath: string): Promise<unknown> {
-  const attempts: { label: string; url: string }[] = [
-    { label: 'local-proxy', url: `/api/seoul/${apiPath}` },
-    { label: 'direct', url: `${SEOUL_API_HOST}/${apiPath}` },
-  ]
+  const url = `${PROXY_PREFIX}/${apiPath}`
+  const res = await fetch(url)
 
-  let lastError = 'API 요청에 실패했습니다.'
-  let lastStatus = 0
-
-  for (const { label, url } of attempts) {
-    try {
-      const res = await fetch(url)
-      lastStatus = res.status
-
-      if (!res.ok) {
-        lastError = `API 요청 실패 (${res.status}) [${label}]`
-        continue
-      }
-
-      const data = await readJsonResponse(res)
-      const info = (data as { culturalEventInfo?: { RESULT?: { CODE?: string } } })
-        ?.culturalEventInfo
-
-      if (info?.RESULT?.CODE || info) {
-        return data
-      }
-
-      lastError = `API 응답 형식 오류 [${label}]`
-    } catch (err) {
-      if (err instanceof TypeError && label === 'direct') {
-        lastError =
-          '브라우저에서 API에 직접 연결할 수 없습니다. npm run dev 로 실행해 주세요.'
-        continue
-      }
-      lastError =
-        err instanceof Error ? err.message : 'API 요청 중 오류가 발생했습니다.'
-    }
-  }
-
-  if (lastStatus === 404) {
+  if (!res.ok) {
     throw new Error(
-      `${lastError}\n\n개발 서버로 실행했는지 확인해 주세요:\n  npm run dev\n그 후 http://localhost:5173 접속`,
+      `API 요청 실패 (${res.status}). 배포 환경이면 Vercel 재배포 후 다시 시도해 주세요.`,
     )
   }
 
-  throw new Error(lastError)
+  const data = await readJsonResponse(res)
+  const info = (data as { culturalEventInfo?: { RESULT?: { CODE?: string } } })
+    ?.culturalEventInfo
+
+  if (!info?.RESULT?.CODE && !info) {
+    throw new Error('API 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
 }
 
 export async function fetchCulturalEvents(

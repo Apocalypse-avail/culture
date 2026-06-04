@@ -44,3 +44,13 @@ VITE_SEOUL_API_KEY=발급받은_인증키
 npm run build
 npm run preview
 ```
+
+## Vercel 배포
+
+로컬에서는 Vite 프록시가 API를 중계하고, [Vercel](https://vercel.com)에서는 `api/seoul/[...path].ts` 서버리스 함수가 같은 `/api/seoul/...` 경로를 처리합니다.
+
+1. GitHub 저장소 [Apocalypse-avail/culture](https://github.com/Apocalypse-avail/culture) 연결
+2. Framework Preset: **Vite**
+3. 배포 후 `https://culture-xi.vercel.app` 에서 확인
+
+배포 후에도 오류가 나면 Vercel 대시보드에서 **Redeploy** 하세요.
