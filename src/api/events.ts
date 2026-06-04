@@ -1,6 +1,8 @@
 import type { CulturalEvent, EventFilters, FetchEventsResult } from '../types/event'
 
-const API_KEY = (import.meta.env.VITE_SEOUL_API_KEY ?? 'sample').trim()
+/** .env 미설정 시 사용 (GitHub Pages 등 배포 환경용) */
+const DEFAULT_API_KEY = '776e786a4b7365613130375943726174'
+const API_KEY = (import.meta.env.VITE_SEOUL_API_KEY ?? DEFAULT_API_KEY).trim()
 const SEOUL_API_HOST = 'http://openapi.seoul.go.kr:8088'
 
 function encodeSegment(value: string): string {
@@ -138,12 +140,6 @@ export async function fetchCulturalEvents(
 
   const start = (page - 1) * pageSize + 1
   const end = page * pageSize
-
-  if (API_KEY === 'sample' && end - start + 1 > 5) {
-    throw new Error(
-      '샘플 키(sample)는 한 번에 최대 5건만 조회할 수 있습니다. .env에 발급받은 API 키를 넣어 주세요.',
-    )
-  }
 
   const apiPath = buildApiPath(start, end, filters)
   const data = await requestSeoulApi(apiPath)
